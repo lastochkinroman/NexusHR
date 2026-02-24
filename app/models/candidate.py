@@ -13,7 +13,7 @@ class Candidate(Base):
     
     resume_text = Column(Text, nullable=True)
     
-    embedding = Column(Vector(1536), nullable=True)
+    embedding = Column(Vector(1024), nullable=True)
     
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
