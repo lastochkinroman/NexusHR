@@ -11,11 +11,11 @@ class Candidate(Base):
     last_name = Column(String(100), nullable=False)
     email = Column(String(255), unique=True, index=True, nullable=False)
     
-    # Сюда мы запишем весь текст из PDF резюме
     resume_text = Column(Text, nullable=True)
     
-    # ВЕКТОР: Это массив из 1536 чисел (стандарт для OpenAI моделей)
-    # Именно по нему мы будем искать кандидатов "по смыслу"
     embedding = Column(Vector(1536), nullable=True)
     
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    def __repl__(self):
+        return f"<Candidate(name={self.first_name}  {self.last_name}, email={self.email})>"
