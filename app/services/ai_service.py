@@ -15,3 +15,32 @@ class AIService:
             inputs=[truncated_text] 
         )
         return response.data[0].embedding
+    
+    async def analyze_candidates(self, query: str, candidates_content: str) -> str:
+        """
+        Метод для финальной стадии RAG: генерация ответа на основе найденных данных.
+        """
+        system_prompt = (
+            "Ты — профессиональный технический рекрутер в IT-компании. "
+            "Твоя задача: проанализировать предоставленные резюме и ответить на запрос нанимающего менеджера. "
+            "Пиши кратко, честно и только по делу. Если кандидат не подходит, укажи причины."
+        )
+        user_prompt = f"""
+        Запрос менеджера: "{query}"
+
+        Вот список найденных резюме из нашей базы данных:
+        ---
+        {candidates_content}
+        ---
+
+        На основе этих данных, составь краткий аналитический отчет по самому подходящему кандидату (или нескольким).
+        """
+
+        response = await self.client.chat.complete_async(
+            model="mistral-small-latest",
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt},
+            ]
+        )
+        return response.choices[0].message.content

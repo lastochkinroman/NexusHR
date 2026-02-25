@@ -65,3 +65,32 @@ async def search_candidates(
             "preview": c.resume_text[:200] + "..."
         } for c in candidates
     ]
+
+@router.get("/smart-search")
+async def smart_search(
+    query: str, 
+    db: AsyncSession = Depends(get_db)
+):
+    query_embedding = await ai_service.get_embedding(query)
+    statement = (
+        select(Candidate)
+        .order_by(Candidate.embedding.l2_distance(query_embedding))
+        .limit(3)
+    )
+    result = await db.execute(statement)
+    candidates = result.scalars().all()
+
+    if not candidates:
+        return {"answer": "В базе данных пока нет подходящих кандидатов."}
+
+    context = ""
+    for c in candidates:
+        context += f"КАНДИДАТ: {c.first_name} {c.last_name}\nРЕЗЮМЕ:\n{c.resume_text}\n\n"
+
+    ai_answer = await ai_service.analyze_candidates(query, context)
+
+    return {
+        "query": query,
+        "ai_analysis": ai_answer,
+        "source_candidates": [f"{c.first_name} {c.last_name}" for c in candidates]
+    }
